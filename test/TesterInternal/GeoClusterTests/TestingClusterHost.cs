@@ -78,7 +78,7 @@ namespace Tests.GeoClusterTests
             {
                 Assert.Equal(expected, actual);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 WriteLog("Equality assertion failed; expected={0}, actual={1} comment={2}", expected, actual, comment);
                 throw;
@@ -323,7 +323,7 @@ namespace Tests.GeoClusterTests
             WriteLog("Starting {0} connected to {1}", name, gatewayport);
 
             var clientArgs = new object[] { name, gatewayport, ClusterId, customizer };
-            var setup = new AppDomainSetup { ApplicationBase = Environment.CurrentDirectory };
+            var setup = AppDomainSiloHandle.GetAppDomainSetupInfo();
             var clientDomain = AppDomain.CreateDomain(name, null, setup);
 
             T client = (T)clientDomain.CreateInstanceFromAndUnwrap(

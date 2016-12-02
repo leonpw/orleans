@@ -18,8 +18,6 @@ using Orleans.Runtime.Configuration;
 
 namespace Orleans.Serialization
 {
-    using System.Runtime.InteropServices;
-
     /// <summary>
     /// SerializationManager to oversee the Orleans serializer system.
     /// </summary>
@@ -56,7 +54,7 @@ namespace Orleans.Serialization
         public delegate void ValueTypeSetter<TDeclaring, in TField>(ref TDeclaring instance, TField value);
 
         private static readonly string[] safeFailSerializers = { "Orleans.FSharp" };
-
+        
 #if NETSTANDARD
         // Workaround for CoreCLR where FormatterServices.GetUninitializedObject is not public (but might change in RTM so we could remove this then).
         private static readonly Func<Type, object> getUninitializedObjectDelegate =
@@ -145,7 +143,6 @@ namespace Orleans.Serialization
                 RegisterBuiltInSerializers();
                 BufferPool.InitGlobalBufferPool(new MessagingConfiguration(false));
                 RegisterSerializationProviders(serializationProviders);
-                AssemblyProcessor.Initialize();
                 fallbackSerializer = GetFallbackSerializer(fallbackType);
             }
             catch (ReflectionTypeLoadException ex)
@@ -192,7 +189,6 @@ namespace Orleans.Serialization
             }
 
             RegisterSerializationProviders(serializationProviders);
-            AssemblyProcessor.Initialize();
         }
 
         internal static void RegisterBuiltInSerializers()
@@ -267,6 +263,10 @@ namespace Orleans.Serialization
             Register(typeof(TimeSpan), BuiltInTypes.CopyTimeSpan, BuiltInTypes.SerializeTimeSpan, BuiltInTypes.DeserializeTimeSpan);
             Register(typeof(DateTimeOffset), BuiltInTypes.CopyDateTimeOffset, BuiltInTypes.SerializeDateTimeOffset, BuiltInTypes.DeserializeDateTimeOffset);
             Register(typeof(Type), BuiltInTypes.CopyType, BuiltInTypes.SerializeType, BuiltInTypes.DeserializeType);
+            // ReSharper disable PossibleMistakenCallToGetType.2
+            // RuntimeType is internal but can be obtained indirectly by calling GetType().
+            Register(typeof(object).GetType(), BuiltInTypes.CopyType, BuiltInTypes.SerializeType, BuiltInTypes.DeserializeType);
+            // ReSharper restore PossibleMistakenCallToGetType.2
             Register(typeof(Guid), BuiltInTypes.CopyGuid, BuiltInTypes.SerializeGuid, BuiltInTypes.DeserializeGuid);
             Register(typeof(IPAddress), BuiltInTypes.CopyIPAddress, BuiltInTypes.SerializeIPAddress, BuiltInTypes.DeserializeIPAddress);
             Register(typeof(IPEndPoint), BuiltInTypes.CopyIPEndPoint, BuiltInTypes.SerializeIPEndPoint, BuiltInTypes.DeserializeIPEndPoint);
@@ -1836,7 +1836,7 @@ namespace Orleans.Serialization
 
 #region Fallback serializer and deserializer
 
-        private static void FallbackSerializer(object raw, BinaryTokenStreamWriter stream, Type t)
+        internal static void FallbackSerializer(object raw, BinaryTokenStreamWriter stream, Type t)
         {
             Stopwatch timer = null;
             if (StatisticsCollector.CollectSerializationStats)

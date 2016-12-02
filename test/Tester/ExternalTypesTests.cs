@@ -8,9 +8,6 @@ using Xunit;
 
 namespace UnitTests.General
 {
-    /// <summary>
-    /// Unit tests for grains implementing generic interfaces
-    /// </summary>
     public class ExternalTypesTests : HostedTestClusterEnsureDefaultStarted
     {
         [Fact, TestCategory("BVT"), TestCategory("Functional"), TestCategory("Serialization")]
